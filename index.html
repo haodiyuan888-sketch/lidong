@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>立冬快乐</title>
+    <style>
+        :root{
+            --bg:#fafafa;
+            --fg:#222;
+            --sub:#777;
+            --accent:#ff6b81;
+            --accent-soft:#ffe5ea;
+            --heart:#ff7a90;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        html,body{height:100%;}
+        body{
+            background:var(--bg);
+            font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,
+            "PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+            color:var(--fg);
+            overflow:hidden;
+        }
+
+        /* 音乐设置 */
+        audio { display: none; }
+        /* 飘心背景 */
+        .hearts{
+            position:fixed;
+            inset:0;
+            overflow:hidden;
+            pointer-events:none;
+            z-index:0;
+        }
+        .heart{
+            position:absolute;
+            width:18px;
+            height:18px;
+            background:var(--heart);
+            transform:rotate(45deg);
+            opacity:.9;
+            filter:drop-shadow(0 3px 6px rgba(255,105,130,.35));
+            animation:floatUp linear forwards;
+        }
+        .heart:before,
+        .heart:after{
+            content:"";
+            position:absolute;
+            width:100%;
+            height:100%;
+            background:inherit;
+            border-radius:50%;
+        }
+        .heart:before{left:-50%;}
+        .heart:after{top:-50%;}
+        @keyframes floatUp{
+            to{
+                transform:translateY(-200vh) rotate(45deg);
+                opacity:0;
+            }
+        }
+
+        /* 顶部标题 */
+        .top-title{
+            position:fixed;
+            top:10px;
+            left:50%;
+            transform:translateX(-50%);
+            text-align:center;
+            z-index:5;
+            pointer-events:none;
+        }
+        .top-title h1{
+            font-size:20px;
+            font-weight:600;
+            letter-spacing:.4px;
+        }
+        .top-title p{
+            margin-top:4px;
+            font-size:13px;
+            color:var(--sub);
+        }
+
+        /* 中央问句+按钮 */
+        .center{
+            position:fixed;
+            inset:0;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            z-index:6;
+            text-align:center;
+            background:transparent;
+        }
+        .question{
+            font-size:17px;
+            line-height:1.7;
+            margin-bottom:18px;
+            padding:0 18px;
+        }
+        .btns{
+            display:flex;
+            gap:12px;
+            justify-content:center;
+            align-items:center;
+            position:relative;
+            width:100%;
+            max-width:480px;
+            margin:0 auto;
+        }
+        button{
+            appearance:none;
+            border:none;
+            border-radius:999px;
+            padding:10px 18px;
+            font-size:15px;
+            cursor:pointer;
+            transition:all .32s cubic-bezier(.22,.61,.36,1.1);
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+            gap:6px;
+            box-shadow:0 6px 18px rgba(255,107,129,.28);
+            background:var(--accent);
+            color:#fff;
+            position:relative;
+            z-index:2;
+        }
+        button.secondary{
+            background:#f1f1f1;
+            color:#444;
+            box-shadow:none;
+        }
+        button.bounce{
+            animation:bounce .35s ease;
+        }
+        @keyframes bounce{
+            0%{transform:scale(1);}
+            40%{transform:scale(1.16);}
+            70%{transform:scale(.96);}
+            100%{transform:scale(1);}
+        }
+        .fade-out{
+            opacity:0;
+            transform:translateY(-10px);
+            pointer-events:none;
+            transition:all .4s ease;
+        }
+
+        /* 全屏气泡层 */
+        .bubble-layer{
+            position:fixed;
+            inset:0;
+            padding:8px;
+            z-index:3;
+            overflow:hidden;
+            display:none;
+        }
+        .bubble{
+            position:absolute;
+            padding:9px 13px;
+            border-radius:18px;
+            background:var(--accent-soft);
+            font-size:15px;
+            line-height:1.5;
+            color:#ff5070;
+            box-shadow:0 3px 10px rgba(0,0,0,.06);
+            display:inline-flex;
+            align-items:flex-start;
+            gap:5px;
+            word-break:break-word;
+            max-width:min(260px, 52vw);
+            animation:bubbleIn .35s cubic-bezier(.21,.67,.33,1.35);
+            transform-origin:center;
+        }
+        .bubble span.icon{
+            font-size:17px;
+            line-height:1.2;
+        }
+        .bubble span.text{
+            display:inline-block;
+        }
+
+        @keyframes bubbleIn{
+            0%{
+                opacity:0;
+                transform:translateY(14px) scale(.4) rotate(-4deg);
+            }
+            55%{
+                opacity:1;
+                transform:translateY(-4px) scale(1.06) rotate(2deg);
+            }
+            100%{
+                opacity:1;
+                transform:translateY(0) scale(1) rotate(0deg);
+            }
+        }
+
+        .hint{
+            position:fixed;
+            bottom:10px;
+            right:12px;
+            font-size:10px;
+            color:#c4c4c4;
+            z-index:4;
+            display:none;
+            text-align:right;
+        }
+    </style>
+</head>
+<body>
+<div class="hearts" id="hearts"></div>
+
+<div class="top-title">
+    <h1>立冬快乐 ❄️</h1>
+</div>
+
+<div class="center" id="center">
+    <p class="question" id="question">
+    </p>
+    <div class="btns" id="btns">
+        <button id="yesBtn">同乐 💖</button>
+        <button class="secondary" id="noBtn">不快乐🙈</button>
+    </div>
+</div>
+
+<div class="bubble-layer" id="bubbleLayer"></div>
+<div class="hint" id="hint"></div>
+<!-- 音乐 -->
+<audio id="bgMusic" loop>
+    <source src="我期待的不是雪.mp3" type="audio/mpeg">
+</audio>
+
+
+<script>
+    // ===== 文案池 =====
+    const RAW_MESSAGES = [
+        "祝你每天都开心快乐，心想事成！😊",
+        "愿你每一天都过得充实美好！🌸",
+        "朋友，愿你一生平安，幸福常伴！🍀",
+        "你是我最宝贵的朋友，愿你永远快乐！💖",
+        "未来的路我们一起走，永不分离！🚶‍♂️",
+        "无论遇到什么困难，都要勇敢前行！💪",
+        "愿你每天都笑得灿烂，生活如意！✨",
+        "你是我生命中的阳光，感谢有你！☀️",
+        "永远支持你，朋友，不管风雨如何！⛈️",
+        "愿你未来的每一天都充满幸福和成功！🌟",
+        "感谢你一直陪伴在我身边，愿你一生平安！🙏",
+        "祝福你有个美好的未来，走得更远！🚀",
+        "朋友，祝你一生幸福安康，心愿都能成真！💫",
+        "愿你在人生的路上越走越宽广！🌍",
+        "不管在哪里，我都永远是你的朋友！🤝",
+        "祝你每天都能遇到温暖的人，拥有美好的一天！💛",
+        "你是我最值得珍惜的朋友，愿你永远开心！😊",
+        "朋友，愿你心中有光，生活永远温暖！🌟",
+        "一路上有你，真好，未来我们继续前行！👣",
+        "愿你拥有一个不平凡的人生，梦想成真！🌠",
+        "祝你天天都充满力量，笑容常在！💪😊",
+        "愿你所有的付出都有回报，未来无限光明！🌅",
+        "朋友，愿你平安喜乐，幸福美满！🍃",
+        "祝你生活甜蜜，心情愉快，梦想成真！🍭",
+        "希望你每天都能有快乐，未来充满希望！🌈",
+        "愿你无忧无虑，拥有一切美好！💖",
+        "感谢你一直在我身边，愿你永远幸福！🌹",
+        "你是我永远的朋友，愿你永远年轻快乐！🎉",
+        "朋友，愿你人生精彩，笑容永远灿烂！😄",
+        "无论未来怎样，我都会陪你走下去！💫",
+        "愿你每一天都充满阳光，心情愉快！🌞",
+        "朋友，祝你未来更加辉煌，梦想成真！🌠",
+        "愿你的生活像这美丽的花朵一样绽放！🌸",
+        "祝你一切顺利，事事如意！🍀",
+        "无论未来多么复杂，希望你都能轻松面对！💫",
+        "愿你每天都能收获喜悦，心中充满温暖！💛",
+        "祝福你永远拥有一个温馨的家，幸福满满！🏡",
+        "朋友，愿你的人生充满美好的惊喜和好运！🎉",
+        "愿你在未来的道路上走得更加坚定和自信！💪",
+        "愿你的笑容永远灿烂，心情永远愉快！😁",
+        "祝你天天开心，做自己最喜欢的事情！🌟",
+        "感谢你陪伴我度过每一个精彩时刻，愿你永远幸福！✨",
+        "愿你无忧无虑，拥有一切你想要的美好！🌷",
+        "朋友，愿你在未来的日子里如愿以偿，收获满满！🎯",
+        "愿你身心健康，笑容永远灿烂！🌞",
+        "祝你拥有一个美好的人生，每个梦想都能实现！🌈",
+        "朋友，愿你未来的每一天都充满阳光和爱！💖",
+        "愿你在未来的路上更加坚定，勇往直前！🚀",
+        "祝你每天都有开心的事情发生，生活充满欢乐！🎈",
+        "愿你时刻拥有好运，永远笑得最灿烂！🌟",
+        "无论未来如何，愿你都能从容不迫地面对！🌸",
+        "朋友，愿你在生活的舞台上始终闪耀光彩！✨",
+        "祝你心想事成，未来更加精彩！🌠",
+        "愿你在每一个挑战面前都能勇敢前行！🦋",
+        "愿你的人生充满爱与温暖，事事顺心！🍀",
+        "朋友，祝你前程似锦，未来无可限量！💼",
+        "愿你每天都拥有无尽的幸福与欢乐！😊",
+        "祝你永远像今天一样美丽，充满力量！💪",
+        "愿你的人生像一首美妙的歌，永远动听！🎶",
+        "朋友，愿你一生平安幸福，万事如意！🌷",
+    ];
+
+    const icons = ["💗","💕","💓","💞","🩷","✨","🥹","🤍","🫶","🐻","🐱","❄️","☃️","🧣","🫧","🌷","⭐️","📩","💌","🧸"];
+    function pickIcon(){ return icons[Math.floor(Math.random()*icons.length)]; }
+
+    const heartsEl = document.getElementById('hearts');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const center = document.getElementById('center');
+    const bubbleLayer = document.getElementById('bubbleLayer');
+    const hint = document.getElementById('hint');
+    const btns = document.getElementById('btns');
+
+    let declineCount = 0;
+    let yesScale = 1;
+    let started = false;
+    let runawayInitialized = false;
+
+    // 逃跑偏移（只用 transform 做位移，确保每次都是动画，不闪现，也不和“愿意”重叠）
+    const runDeltas = [
+        { x: 160, y: -40 },  // 往右上逃
+        { x: -180, y: 40 },  // 往左下逃
+        { x: 150, y: 70 }    // 往右下逃
+    ];
+
+    function initRunawayPosition() {
+        if (runawayInitialized) return;
+        runawayInitialized = true;
+
+        const parentRect = btns.getBoundingClientRect();
+        const rect = noBtn.getBoundingClientRect();
+        const offsetLeft = rect.left - parentRect.left;
+        const offsetTop = rect.top - parentRect.top;
+
+        noBtn.style.position = "absolute";
+        noBtn.style.left = offsetLeft + "px";
+        noBtn.style.top = offsetTop + "px";
+        noBtn.style.transform = "translate(0,0)";
+    }
+
+    function moveNoBtn(step){
+        const d = runDeltas[(step - 1) % runDeltas.length];
+        const angle = (Math.random() > 0.5 ? 10 : -10);
+        noBtn.style.transform = `translate(${d.x}px, ${d.y}px) rotate(${angle}deg)`;
+    }
+
+    yesBtn.addEventListener('click', () => {
+        if (!started) startLoveMode();
+    });
+
+
+    noBtn.addEventListener('click', () => {
+        if (started) return;
+        declineCount++;
+
+        if (declineCount === 1) {
+            initRunawayPosition();
+            noBtn.textContent = "该点另一个，咋点错了 🙃";
+            moveNoBtn(declineCount);
+        } else if (declineCount === 2) {
+            noBtn.textContent = "该点另一个，咋点错了 🙃";
+            moveNoBtn(declineCount);
+        } else if (declineCount === 3) {
+            noBtn.textContent = "该点另一个，咋点错了 🙃";
+            moveNoBtn(declineCount);
+        } else if (declineCount === 4) {
+            noBtn.textContent = "该点另一个，咋点错了 🙃";
+            moveNoBtn(declineCount);
+        } else if (declineCount >= 5) {
+
+            if (!started) startLoveMode();
+            return;
+        }
+
+        // 前四次顺便放大“愿意”按钮
+        if (declineCount <= 4) {
+            yesScale *= 1.2;
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            yesBtn.classList.remove('bounce');
+            noBtn.classList.remove('bounce');
+            void yesBtn.offsetWidth;
+            yesBtn.classList.add('bounce');
+            noBtn.classList.add('bounce');
+        }
+    });
+
+    function startLoveMode(){
+        started = true;
+        center.classList.add('fade-out');
+
+        setTimeout(() => {
+            center.style.display = 'none';
+            bubbleLayer.style.display = 'block';
+            hint.style.display = 'block';
+            startHearts();
+            startBubbles();
+        }, 420);
+    }
+
+    // 心心
+    function startHearts(){
+        function spawnHeart(){
+            const h = document.createElement('div');
+            h.className = 'heart';
+            const size = 10 + Math.random()*18;
+            h.style.width = size+'px';
+            h.style.height = size+'px';
+            h.style.left = (Math.random()*100) + 'vw';
+            h.style.top  = (100 + Math.random()*10) + 'vh';
+            const colors = ["#ff7a90","#ffa3b1","#ff8f8f","#ff6b81","#ffd1d9"];
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            h.style.background = c;
+            h.style.setProperty('--heart', c);
+            const dur = 7 + Math.random()*6;
+            h.style.animationDuration = dur + 's';
+            heartsEl.appendChild(h);
+            setTimeout(()=>h.remove(), dur*1000+800);
+        }
+        setInterval(() => {
+            if (!started) return;
+            const n = 1 + Math.floor(Math.random()*3);
+            for (let i=0; i<n; i++) spawnHeart();
+        }, 420);
+    }
+    // 页面加载完成后，绑定按钮事件
+    window.onload = function() {
+        const giftPopup = document.getElementById('giftPopup');
+        const wishContainer = document.getElementById('wishContainer');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const bgm = document.getElementById('bgm');
+        // 点击"确定"：隐藏弹窗，启动祝福效果和音乐
+        yesBtn.addEventListener('click', () => {
+            bgm.play().catch(() => {
+                alert('请点击页面空白处触发音乐');
+                document.body.addEventListener('click', () => bgm.play(), {once: true});
+            });
+            giftPopup.style.display = 'none';
+            wishContainer.style.display = 'block';
+            startWishEffect();
+        });
+        // 点击"取消"：直接关闭页面
+        noBtn.addEventListener('click', () => {
+            window.close(); // 浏览器中关闭当前标签页
+        });
+    };
+    // 点击"取消"：直接关闭页面
+    // 气泡雨
+    function startBubbles(){
+        let total = 0;
+
+        function pushBubble(){
+            if (!started) return;
+
+            const msg = RAW_MESSAGES[Math.floor(Math.random()*RAW_MESSAGES.length)];
+
+            const b = document.createElement('div');
+            b.className = 'bubble';
+
+            const iconEl = document.createElement('span');
+            iconEl.className = 'icon';
+            iconEl.textContent = pickIcon();
+
+            const textEl = document.createElement('span');
+            textEl.className = 'text';
+            textEl.textContent = msg;
+
+            b.appendChild(iconEl);
+            b.appendChild(textEl);
+            bubbleLayer.appendChild(b);
+
+            const layerRect = bubbleLayer.getBoundingClientRect();
+            const bubbleRect = b.getBoundingClientRect();
+            const maxLeft = Math.max(4, layerRect.width - bubbleRect.width - 6);
+            const maxTop  = Math.max(24, layerRect.height - bubbleRect.height - 14);
+
+            const left = 4 + Math.random() * maxLeft;
+            const top  = 24 + Math.random() * maxTop;
+
+            b.style.left = left + 'px';
+            b.style.top  = top + 'px';
+
+            total++;
+
+            let delay;
+            if (total < 60) {
+                delay = 70 + Math.random()*45;
+            } else if (total < 220) {
+                delay = 140 + Math.random()*130;
+            } else {
+                delay = 260 + Math.random()*220;
+            }
+
+            if (total > 450 && bubbleLayer.children.length > 320) {
+                bubbleLayer.removeChild(bubbleLayer.firstChild);
+            }
+
+            setTimeout(pushBubble, delay);
+        }
+
+        setTimeout(pushBubble, 160);
+    }
+</script>
+</body>
+</html>
