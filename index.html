@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <title>立冬快乐</title>
     <style>
+        /* 隐藏音乐进度条，不占空间 */
+        audio { display: none; }
+        /* 初始弹窗样式 */
         :root{
             --bg:#fafafa;
             --fg:#222;
@@ -23,9 +26,6 @@
             overflow:hidden;
         }
 
-        /* 音乐设置 */
-        audio { display: none; }
-        /* 飘心背景 */
         .hearts{
             position:fixed;
             inset:0;
@@ -211,8 +211,11 @@
     </style>
 </head>
 <body>
+<!-- 音乐 -->
+<audio id="bgm" loop>
+    <source src="我期待的不是雪.mp3" type="audio/mpeg">
+</audio>
 <div class="hearts" id="hearts"></div>
-
 <div class="top-title">
     <h1>立冬快乐 ❄️</h1>
 </div>
@@ -228,12 +231,6 @@
 
 <div class="bubble-layer" id="bubbleLayer"></div>
 <div class="hint" id="hint"></div>
-<!-- 音乐 -->
-<audio id="bgm" loop>
-    <source src="我期待的不是雪.mp3" type="audio/mpeg">
-</audio>
-
-
 <script>
     // ===== 文案池 =====
     const RAW_MESSAGES = [
@@ -424,8 +421,8 @@
     }
     // 页面加载完成后，绑定按钮事件
     window.onload = function() {
-        const giftPopup = document.getElementById('giftPopup');
-        const wishContainer = document.getElementById('wishContainer');
+        const giftPopup = document.getElementById('center');
+        const wishContainer = document.getElementById('center');
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
         const bgm = document.getElementById('bgm');
@@ -437,15 +434,8 @@
             });
             giftPopup.style.display = 'none';
             wishContainer.style.display = 'block';
-            startWishEffect();
-        });
-        // 点击"取消"：直接关闭页面
-        noBtn.addEventListener('click', () => {
-            window.close(); // 浏览器中关闭当前标签页
         });
     };
-    // 点击"取消"：直接关闭页面
-    // 气泡雨
     function startBubbles(){
         let total = 0;
 
